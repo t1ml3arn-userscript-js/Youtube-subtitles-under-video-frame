@@ -21,7 +21,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.0.1
+// @version     1.0.2
 // @match       https://www.youtube.com/*
 // @grant       none
 // @run-at      document-idle
@@ -68,6 +68,7 @@ ytd-watch-flexy #info.ytd-watch-flexy {
 const SUBS_BUTTON_SELECTOR = '.ytp-subtitles-button'
 const USERJS_ELT_CLASS = 'yfms-userjs'
 const USERJS_STYLE_ID = 'youtube-subs-under-video-css'
+const PLAYER_ELT_SELECTOR = 'ytd-watch-flexy'
 
 function waitElem(selector, interval = 500, timeout = 10000) {
 
@@ -108,7 +109,7 @@ function switchSubtitlesMarker(subsButton) {
 
     // this elt gets special attribute by youtube when view mode changes,
     // so it also gets my marker class to apply my CSS
-    const playerElt = document.querySelector('ytd-watch-flexy')
+    const playerElt = document.querySelector(PLAYER_ELT_SELECTOR)
     if (pressed === 'true')
         playerElt.classList.add(USERJS_ELT_CLASS)
     else if (pressed === 'false')
@@ -126,7 +127,18 @@ const init = async () => {
         console.info(`Video ${window.location.href} has no subtitles`);
         return
     }
-    
+
+    try {
+        await waitElem(PLAYER_ELT_SELECTOR, 100, 10000)
+    } catch (e) {
+        // we are on video page, but have no player
+        if (window.location.search.includes('v=')) {
+            console.error(e)
+            console.error('Cannot find player element on this video page. New markup?')
+        }
+        return
+    }
+
     switchSubtitlesMarker(subsButton)
 
     subsButton.addEventListener('click', e => {
