@@ -19,6 +19,7 @@ Have you ever been annoyed by youtube subtitles covering some important part of 
 
 - When a youtube page has loaded and player is in default view mode but playback is not started yet, you can see some glitch above video frame when you enable subtitles. The glitch disappears when you start playing the video.
 - If a current video has subs and they are enabled and you open a new video without subs, the new video gets styles as it is with subs (wider gap between bootom of the video and video title)
+- Since youtube is a SPA, sometimes when you open new video in the same window the script fails to initialize
 
 ## License
 
