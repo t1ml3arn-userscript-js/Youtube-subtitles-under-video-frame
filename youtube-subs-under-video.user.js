@@ -21,10 +21,11 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.1.0
+// @version     1.1.1
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
+// @noframes
 // @author      T1mL3arn
 // @icon        data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGRlZnM+PHN5bWJvbCBpZD0iYSIgdmlld0JveD0iMCAwIDM0NCA1OSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PHJlY3QgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwKSIgaGVpZ2h0PSIxMDAlIiB3aWR0aD0iMTAwJSIvPjxwYXRoIGQ9Ik0tNTAtNTBINTBWNTBILTUwVi01MHoiIGZpbGw9IiNGRkYiIGZpbGwtb3BhY2l0eT0iMCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTAgNTApIi8+PHBhdGggZD0iTS01MC01MEg1MFY1MEgtNTBWLTUweiIgZmlsbD0iI0ZGRiIgZmlsbC1vcGFjaXR5PSIwIiB0cmFuc2Zvcm09Im1hdHJpeCguNDUgMCAwIC43NiAxNTYuNDEgMzY5Ljc1KSIvPjxwYXRoIGQ9Ik0tNTAtNTBWNTBINTBWLTUwSC01MHoiIGZpbGw9IiNGRkYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIwIiB0cmFuc2Zvcm09Im1hdHJpeCgyLjQxIDAgMCAuMiAxMjAuNSAxMCkiLz48cGF0aCBkPSJNLTUwLTUwVjUwSDUwVi01MEgtNTB6IiBmaWxsPSIjRkZGIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMCIgdHJhbnNmb3JtPSJtYXRyaXgoLjcgMCAwIC4yIDMxMC4xOCAxMCkiLz48cGF0aCBkPSJNLTUwLTUwVjUwSDUwVi01MEgtNTB6IiBmaWxsPSIjRkZGIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMCIgdHJhbnNmb3JtPSJtYXRyaXgoLTIuNDEgMCAwIC0uMiAyMjQuNjggNTApIi8+PHBhdGggZD0iTS01MC01MFY1MEg1MFYtNTBILTUweiIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjAiIHRyYW5zZm9ybT0ibWF0cml4KC0uNyAwIDAgLS4yIDM1IDUwKSIvPjwvc3ltYm9sPjwvZGVmcz48ZyBjbGFzcz0ibGF5ZXIiPjxwYXRoIGQ9Ik00OTguMjk0IDU3LjI5OWMtNS44MjgtMjEuNzc2LTIyLjk0Mi0zOC44ODgtNDQuNzE4LTQ0LjcxN0M0MTQuMTUgMi4wMDYgMjU1Ljk3MiAyLjAwNiAyNTUuOTcyIDIuMDA2cy0xNTguMTc0IDAtMTk3LjYwMyAxMC41NzZDMzYuNTkzIDE4LjQxIDE5LjQ4IDM1LjUyMyAxMy42NTIgNTcuMjk5IDMuMDc2IDk2LjcyOCAzLjA3NiAxNzkuMDQyIDMuMDc2IDE3OS4wNDJzMCA4Mi4zMTUgMTAuNTc2IDEyMS43NDRjNS44MjkgMjEuNzc2IDIyLjk0MSAzOC44ODggNDQuNzE3IDQ0LjcxNiAzOS40MjkgMTAuNTc2IDE5Ny42MDMgMTAuNTc2IDE5Ny42MDMgMTAuNTc2czE1OC4xNzcgMCAxOTcuNjA0LTEwLjU3NmMyMS43NzYtNS44MjggMzguODktMjIuOTQgNDQuNzE4LTQ0LjcxNiAxMC41NzYtMzkuNDMgMTAuNTc2LTEyMS43NDQgMTAuNTc2LTEyMS43NDRzLS4wNDItODIuMzE0LTEwLjU3Ni0xMjEuNzQzeiIgZmlsbD0icmVkIi8+PHBhdGggZD0iTTAgLjVoNTEydjUxMkgwVi41eiIgZmlsbD0idHJhbnNwYXJlbnQiLz48cGF0aCBkPSJNNDMuNzg4IDM3MWg0MjQuNDI3djEzMS4zMkg0My43ODhWMzcxeiIvPjx1c2UgdHJhbnNmb3JtPSJtYXRyaXgoLjczNjA4IDAgMCAuOTYyMTcgLTc1Ljk5IC00ODUuMDY1KSIgeD0iMTk0LjE0NCIgeGxpbms6aHJlZj0iI2EiIHk9IjcwMiIvPjxwYXRoIGQ9Im0yMDUuMzQ1IDI1NS4wODYgMTMxLjQwNC03NS44Ni0xMzEuNDA0LTc1Ljg2djE1MS43MnoiIGZpbGw9IiNGRkYiLz48L2c+PC9zdmc+
 // @homepageURL https://github.com/t1ml3arn-userscript-js/Youtube-subtitles-under-video-frame
@@ -108,7 +109,6 @@ function init() {
 
             switchSubtitlesMarker(subsButton)
             
-            // do not add listener if the old button is the same as new
             subsButton.addEventListener('click', onSubsClick)
         }
     })
