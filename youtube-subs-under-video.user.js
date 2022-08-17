@@ -97,6 +97,8 @@ function onSubsClick(e) {
 function init() {
     addStyles(USERJS_STYLE_CONTENT, USERJS_STYLE_ID)
 
+    // Hint about youtube-specific events was found there
+    // https://stackoverflow.com/questions/34077641/how-to-detect-page-navigation-on-youtube-and-modify-its-appearance-seamlessly/34100952#34100952
     document.addEventListener('yt-page-data-updated', _ => {
         if (window.location.search.includes('v=')) {
 
