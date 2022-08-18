@@ -21,7 +21,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.1.1
+// @version     1.2.0
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -71,13 +71,15 @@ ytd-watch-flexy #info.ytd-watch-flexy {
 }
 `
 
+let canToggleSubsWithKeyboard = true;
+
 function addStyles(css, id) {
     const style = document.head.appendChild(document.createElement('style'))
     style.textContent = css;
     style.id = id
 }
 
-function switchSubtitlesMarker(subsButton) {
+function displaceSubtitles(subsButton) {
 
     const pressed = subsButton.getAttribute('aria-pressed')
 
@@ -91,29 +93,75 @@ function switchSubtitlesMarker(subsButton) {
 }
 
 function onSubsClick(e) {
-    switchSubtitlesMarker(e.currentTarget)
+    displaceSubtitles(e.currentTarget)
+}
+
+function getCaptionsButton() {
+    return document.querySelector(SUBS_BUTTON_SELECTOR);
+}
+
+function isItVideoPage() {
+    return window.location.search.includes('v=')
+}
+
+function toggleSubtitlesKeyDown(e) {
+    const subsButton = getCaptionsButton()
+    
+    if (e.code === 'KeyC' || e.keyCode === 67)
+    if (isItVideoPage() && subsButton && canToggleSubsWithKeyboard) {
+        displaceSubtitles(subsButton)
+    }
+}
+
+function onFocusIn(e) {
+
+    // disable captions toggling 
+    // if user focused any input element (like search bar or comment textarea)
+    if (e.target.tagName === 'INPUT' || 
+    e.target.matches('div#contenteditable-root.style-scope.yt-formatted-string')) {
+        canToggleSubsWithKeyboard = false
+    } else {
+        canToggleSubsWithKeyboard = true
+    }
+}
+
+function onFocusOut(e) {
+
+    // restoring captions toggling if user focused out
+    // input elements
+    if (e.target.tagName === 'INPUT' || 
+    e.target.matches('div#contenteditable-root.style-scope.yt-formatted-string')) {
+        canToggleSubsWithKeyboard = true
+    }
+}
+
+function enchanceSubsButton() {
+    if (isItVideoPage()) {
+
+        const subsButton = getCaptionsButton()
+
+        if (!subsButton) {
+            console.debug(`Video ${window.location.href} has no subtitles button`);
+            return
+        }
+
+        displaceSubtitles(subsButton)
+        
+        document.addEventListener('keydown', toggleSubtitlesKeyDown )
+        subsButton.addEventListener('click', onSubsClick)
+    }
 }
 
 function init() {
     addStyles(USERJS_STYLE_CONTENT, USERJS_STYLE_ID)
 
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+
     // Hint about youtube-specific events was found there
     // https://stackoverflow.com/questions/34077641/how-to-detect-page-navigation-on-youtube-and-modify-its-appearance-seamlessly/34100952#34100952
-    document.addEventListener('yt-page-data-updated', _ => {
-        if (window.location.search.includes('v=')) {
-
-            const subsButton = document.querySelector(SUBS_BUTTON_SELECTOR)
-
-            if (!subsButton) {
-                console.debug(`Video ${window.location.href} has no subtitles`);
-                return
-            }
-
-            switchSubtitlesMarker(subsButton)
-            
-            subsButton.addEventListener('click', onSubsClick)
-        }
-    })
+    document.addEventListener('yt-navigate-finish', enchanceSubsButton)
+    document.addEventListener('yt-page-data-updated', enchanceSubsButton)
 }
 
 init();
