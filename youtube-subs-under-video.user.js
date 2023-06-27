@@ -1,6 +1,6 @@
 /* 
     Youtube subtitles under video frame: Move youtube subtitles under video frame.
-	Copyright (C) 2022  T1mL3arn
+	Copyright (C) 2023  T1mL3arn
 
     This program is free software: you can redistribute it and/or modify 
     it under the terms of the GNU General Public License as published by 
@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.2.2
+// @version     1.3.0
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -40,6 +40,11 @@ const USERJS_STYLE_ID = 'youtube-subs-under-video-css'
 const PLAYER_ELT_SELECTOR = 'ytd-watch-flexy'
 
 const USERJS_STYLE_CONTENT = `
+.${USERJS_ELT_CLASS} {
+    --subs-gap: 64px;
+    --subs-gap-theater: 100px;
+}
+
 .${USERJS_ELT_CLASS}:not([fullscreen]) .caption-window.ytp-caption-window-bottom {
     margin-bottom: 0 !important;
     margin-top: 0 !important;
@@ -58,17 +63,19 @@ const USERJS_STYLE_CONTENT = `
     z-index: 999;
 }
 
-ytd-watch-flexy #info.ytd-watch-flexy {
+.${USERJS_ELT_CLASS} #below {
+    margin-top: var(--subs-gap);
     transition: margin-top 0.25s;
 }
 
-.${USERJS_ELT_CLASS} #info.ytd-watch-flexy {
-    margin-top: 64px;
-    transition: margin-top 0.25s;
+.${USERJS_ELT_CLASS}[theater]:not([fullscreen]) #below {
+    margin-top: var(--subs-gap-theater);
 }
 
-.${USERJS_ELT_CLASS}[theater] #info.ytd-watch-flexy {
-    margin-top: 84px;
+/* styling for "related videos" section */
+.${USERJS_ELT_CLASS}[theater]:not([fullscreen]) #secondary.ytd-watch-flexy {
+    margin-top: var(--subs-gap-theater);
+    transition: margin-top 0.25s;
 }
 `
 
