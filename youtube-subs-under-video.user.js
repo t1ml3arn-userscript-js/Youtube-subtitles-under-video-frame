@@ -105,7 +105,8 @@ function onSubsClick(e) {
 }
 
 function getCaptionsButton() {
-    return document.querySelector(SUBS_BUTTON_SELECTOR);
+    let buttons = Array.from(document.querySelectorAll(SUBS_BUTTON_SELECTOR))
+    return buttons.find(b => b.offsetParent !== null);
 }
 
 function isItVideoPage() {
