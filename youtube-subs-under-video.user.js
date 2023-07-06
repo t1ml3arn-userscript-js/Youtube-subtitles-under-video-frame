@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.3.1
+// @version     1.4.0
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -38,11 +38,13 @@ const SUBS_BUTTON_SELECTOR = '.ytp-subtitles-button'
 const USERJS_ELT_CLASS = 'yfms-userjs'
 const USERJS_STYLE_ID = 'youtube-subs-under-video-css'
 const PLAYER_ELT_SELECTOR = 'ytd-watch-flexy'
+const SUBS_GAP = 64;
+const SUBS_GAP_THEATER = 100;
 
 const USERJS_STYLE_CONTENT = `
 .${USERJS_ELT_CLASS} {
-    --subs-gap: 64px;
-    --subs-gap-theater: 100px;
+    --subs-gap: ${SUBS_GAP}px;
+    --subs-gap-theater: ${SUBS_GAP_THEATER}px;
 }
 
 .${USERJS_ELT_CLASS}:not([fullscreen]) .caption-window.ytp-caption-window-bottom {
@@ -77,9 +79,29 @@ const USERJS_STYLE_CONTENT = `
     margin-top: var(--subs-gap-theater);
     transition: margin-top 0.25s;
 }
+
+/*
+#movie_player .html5-video-container {
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    contain: layout size paint style; /* if supported */
+}
+#movie_player .html5-video-container > video[style*="top: -"],
+#movie_player .html5-video-container > video[style*="top:-"] {
+    margin-top: -1px !important; /* (.ended-mode#movie_player) video size 943 x 530.44, but top: -530px only */
+}
+*/
 `
 
 let canToggleSubsWithKeyboard = true;
+const ccSizes = {
+    0: 64,
+    1: 80,
+}
 
 function addStyles(css, id) {
     const style = document.head.appendChild(document.createElement('style'))
@@ -105,8 +127,11 @@ function onSubsClick(e) {
 }
 
 function getCaptionsButton() {
-    let buttons = Array.from(document.querySelectorAll(SUBS_BUTTON_SELECTOR))
-    return buttons.find(b => b.offsetParent !== null);
+    return getVisibleElt(SUBS_BUTTON_SELECTOR)
+}
+
+function getVisibleElt(selector) {
+    return Array.from(document.querySelectorAll(selector)).find(e => e.offsetParent !==null)
 }
 
 function isItVideoPage() {
@@ -155,10 +180,44 @@ function enchanceSubsButton() {
         }
 
         displaceSubtitles(subsButton)
-        
+        updateGapSize()
+
         document.addEventListener('keydown', toggleSubtitlesKeyDown )
         subsButton.addEventListener('click', onSubsClick)
     }
+}
+
+function localStorageHook() {
+    
+    let original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function() {
+        const event = new CustomEvent('storageSetItem', {
+            detail: { 
+                key: arguments[0], 
+                value: arguments[1]
+            },
+        });
+        original.apply(this, arguments);
+        window.dispatchEvent(event);
+    }
+}
+
+function getGapSize(f, initial) {
+    // the formula is found in youtube js code
+    return initial * (1 + 0.25 * Math.max(f || 0, 0));
+}
+
+function updateGapSize() {
+    // NOTE CC visible size remains FIXED even if a user changes
+    // zoom level in his browser!
+
+    const raw = localStorage.getItem('yt-player-caption-display-settings')
+    const ccDisplaySettings = JSON.parse(JSON.parse(raw).data)
+    const fontSizeIncrement = ccDisplaySettings.fontSizeIncrement || 0
+    let newGap = getGapSize(fontSizeIncrement, SUBS_GAP);
+    document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap', `${newGap}px`)
+    newGap = getGapSize(fontSizeIncrement, SUBS_GAP_THEATER)
+    document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap-theater', `${newGap}px`)
 }
 
 function init() {
@@ -171,6 +230,17 @@ function init() {
     // https://stackoverflow.com/questions/34077641/how-to-detect-page-navigation-on-youtube-and-modify-its-appearance-seamlessly/34100952#34100952
     document.addEventListener('yt-navigate-finish', enchanceSubsButton)
     document.addEventListener('yt-page-data-updated', enchanceSubsButton)
+
+    localStorageHook();
+
+    window.addEventListener('storageSetItem', e => {
+        const { key } = e.detail;
+
+        if (key != 'yt-player-caption-display-settings') 
+            return
+        
+        updateGapSize()
+    })
 }
 
 init();
