@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.4.0
+// @version     1.4.1
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -212,7 +212,12 @@ function updateGapSize() {
     // zoom level in his browser!
 
     const raw = localStorage.getItem('yt-player-caption-display-settings')
-    const ccDisplaySettings = JSON.parse(JSON.parse(raw).data)
+    let ccDisplaySettings;
+    try {
+        ccDisplaySettings = JSON.parse(JSON.parse(raw).data)
+    } catch(e) {
+        ccDisplaySettings = {}
+    }
     const fontSizeIncrement = ccDisplaySettings.fontSizeIncrement || 0
     let newGap = getGapSize(fontSizeIncrement, SUBS_GAP);
     document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap', `${newGap}px`)
