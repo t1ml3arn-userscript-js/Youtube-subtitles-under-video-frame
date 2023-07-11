@@ -15,10 +15,6 @@ Have you ever been annoyed by youtube subtitles covering some important part of 
 3. Press **Install this script** button
 4. Confirm the installation
 
-## Known issues
-
-- When a youtube page has loaded and player is in default view mode but playback is not started yet, you can see some glitch above video frame when you enable subtitles. The glitch disappears when you start playing the video.
-
 ## License
 
 [GPLv3](https://www.gnu.org/licenses/gpl-3.0-standalone.html)

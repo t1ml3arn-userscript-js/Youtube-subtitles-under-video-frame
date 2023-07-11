@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.4.1
+// @version     1.4.2
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -65,6 +65,10 @@ const USERJS_STYLE_CONTENT = `
     z-index: 999;
 }
 
+.${USERJS_ELT_CLASS} #movie_player.ended-mode .html5-video-container > video {
+    visibility: hidden;
+}
+
 .${USERJS_ELT_CLASS} #below {
     margin-top: var(--subs-gap);
     transition: margin-top 0.25s;
@@ -79,22 +83,6 @@ const USERJS_STYLE_CONTENT = `
     margin-top: var(--subs-gap-theater);
     transition: margin-top 0.25s;
 }
-
-/*
-#movie_player .html5-video-container {
-    position: absolute;
-    bottom: 0;
-    top: 0;
-    left: 0;
-    right: 0;
-    overflow: hidden;
-    contain: layout size paint style; /* if supported */
-}
-#movie_player .html5-video-container > video[style*="top: -"],
-#movie_player .html5-video-container > video[style*="top:-"] {
-    margin-top: -1px !important; /* (.ended-mode#movie_player) video size 943 x 530.44, but top: -530px only */
-}
-*/
 `
 
 let canToggleSubsWithKeyboard = true;
