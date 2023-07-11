@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.4.2
+// @version     1.4.3
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -65,7 +65,9 @@ const USERJS_STYLE_CONTENT = `
     z-index: 999;
 }
 
-.${USERJS_ELT_CLASS} #movie_player.ended-mode .html5-video-container > video {
+.${USERJS_ELT_CLASS} #movie_player.ended-mode .html5-video-container > video,
+.${USERJS_ELT_CLASS} #movie_player.unstarted-mode .html5-video-container > video,
+ {
     visibility: hidden;
 }
 
