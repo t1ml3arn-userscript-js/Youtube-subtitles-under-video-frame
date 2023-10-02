@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.5.0
+// @version     1.5.1
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -139,11 +139,27 @@ function isItVideoPage() {
     return window.location.search.includes('v=')
 }
 
-function toggleSubtitlesKeyDown(e) {
+function areSubsAvailable() {
     const subsButton = getCaptionsButton()
+
+    if (!subsButton) {
+        console.debug(`Video ${window.location.href} has no subtitles button`);
+        return false
+    }
+
+    // Video may have no subs at all, to catch that case
+    // I can only check button's opacity
+    const btnIcon = subsButton.querySelector('svg')
+    if (parseFloat(btnIcon.getAttribute("fill-opacity") || 1) != 1)
+        return false
+
+    return true
+}
+
+function toggleSubtitlesKeyDown(e) {
     
     if (e.code === 'KeyC' || e.keyCode === 67)
-    if (isItVideoPage() && subsButton && canToggleSubsWithKeyboard) {
+    if (isItVideoPage() && areSubsAvailable() && canToggleSubsWithKeyboard) {
         displaceSubtitles(areSubsEnabled())
     }
 }
@@ -173,12 +189,10 @@ function onFocusOut(e) {
 function enchanceSubsButton() {
     if (isItVideoPage()) {
 
-        const subsButton = getCaptionsButton()
-
-        if (!subsButton) {
-            console.debug(`Video ${window.location.href} has no subtitles button`);
+        if (!areSubsAvailable()) 
             return
-        }
+
+        const subsButton = getCaptionsButton()
 
         let subsEnabled = areSubsEnabled()
         // sometimes I cannot rely on local storage setting

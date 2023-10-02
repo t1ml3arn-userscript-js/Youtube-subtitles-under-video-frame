@@ -19,6 +19,11 @@
 - https://www.freecodeformat.com/svg-editor.php
 - https://svgedit.netlify.app/editor
 
+## Videos to test
+
+- This video is without any subs https://www.youtube.com/watch?v=jMiK29nVkag
+- Video with its own subs layout https://www.youtube.com/watch?v=zLak0dxBKpM
+
 ## Issues
 
 ### Captions with custom effect
