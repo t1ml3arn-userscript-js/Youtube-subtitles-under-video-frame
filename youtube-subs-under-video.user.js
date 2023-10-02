@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.4.5
+// @version     1.5.0
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -40,6 +40,8 @@ const USERJS_STYLE_ID = 'youtube-subs-under-video-css'
 const PLAYER_ELT_SELECTOR = 'ytd-watch-flexy'
 const SUBS_GAP = 64;
 const SUBS_GAP_THEATER = 100;
+const KEY__PLAYER_CAPTION_DISPLAY_SETTINGS = 'yt-player-caption-display-settings'
+const KEY__PLAYER_STICKY_CAPTION = 'yt-player-sticky-caption'
 
 const USERJS_STYLE_CONTENT = `
 .${USERJS_ELT_CLASS} {
@@ -111,21 +113,18 @@ function addStyles(css, id) {
     style.id = id
 }
 
-function displaceSubtitles(subsButton) {
-
-    const pressed = subsButton.getAttribute('aria-pressed')
-
+function displaceSubtitles(below = true) {
     // this elt gets special attribute by youtube when view mode changes,
     // so it also gets my marker class to apply my CSS
     const playerElt = document.querySelector(PLAYER_ELT_SELECTOR)
-    if (pressed === 'true')
+    if (below)
         playerElt.classList.add(USERJS_ELT_CLASS)
-    else if (pressed === 'false')
+    else
         playerElt.classList.remove(USERJS_ELT_CLASS)
 }
 
-function onSubsClick(e) {
-    displaceSubtitles(e.currentTarget)
+function onSubsClick() {
+    displaceSubtitles(areSubsEnabled())
 }
 
 function getCaptionsButton() {
@@ -145,7 +144,7 @@ function toggleSubtitlesKeyDown(e) {
     
     if (e.code === 'KeyC' || e.keyCode === 67)
     if (isItVideoPage() && subsButton && canToggleSubsWithKeyboard) {
-        displaceSubtitles(subsButton)
+        displaceSubtitles(areSubsEnabled())
     }
 }
 
@@ -181,7 +180,18 @@ function enchanceSubsButton() {
             return
         }
 
-        displaceSubtitles(subsButton)
+        let subsEnabled = areSubsEnabled()
+        // sometimes I cannot rely on local storage setting
+        // to get subtitles state but I still can get it
+        // from the caption button ARIA attribute
+        let subsButtonPressed = subsButton.getAttribute('aria-pressed') === 'true'
+        displaceSubtitles(subsEnabled || subsButtonPressed)
+        
+        // forcing YT to enable subs
+        if (subsEnabled && !subsButtonPressed) {
+            subsButton.click()
+        }
+
         updateGapSize()
 
         document.addEventListener('keydown', toggleSubtitlesKeyDown )
@@ -205,7 +215,7 @@ function localStorageHook() {
 }
 
 function getGapSize(f, initial) {
-    // the formula is found in youtube js code
+    // this formula is found in youtube js code
     return initial * (1 + 0.25 * Math.max(f || 0, 0));
 }
 
@@ -213,7 +223,7 @@ function updateGapSize() {
     // NOTE CC visible size remains FIXED even if a user changes
     // zoom level in his browser!
 
-    const raw = localStorage.getItem('yt-player-caption-display-settings')
+    const raw = localStorage.getItem(KEY__PLAYER_CAPTION_DISPLAY_SETTINGS)
     let ccDisplaySettings;
     try {
         ccDisplaySettings = JSON.parse(JSON.parse(raw).data)
@@ -225,6 +235,23 @@ function updateGapSize() {
     document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap', `${newGap}px`)
     newGap = getGapSize(fontSizeIncrement, SUBS_GAP_THEATER)
     document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap-theater', `${newGap}px`)
+}
+
+/** Checks if local storage has a setting for 
+ * enabled/disabled subs.
+ * 
+ * **NOTE**: This setting might not be in local storage even
+ * if a registered YT user enabled subtitles globally 
+ * with YT settings. 
+ * @returns {Bool} 
+ */
+function areSubsEnabled() {
+    const raw = localStorage.getItem(KEY__PLAYER_STICKY_CAPTION)
+    try {
+        return JSON.parse(JSON.parse(raw).data)
+    } catch(e) {
+        return false
+    }
 }
 
 function init() {
@@ -243,10 +270,24 @@ function init() {
     window.addEventListener('storageSetItem', e => {
         const { key } = e.detail;
 
-        if (key != 'yt-player-caption-display-settings') 
-            return
-        
-        updateGapSize()
+        // console.log(`YT local storage "${key}" was updated`)
+
+        switch (key) {
+            case KEY__PLAYER_CAPTION_DISPLAY_SETTINGS:
+                
+                updateGapSize()
+                break;
+
+            case KEY__PLAYER_STICKY_CAPTION:
+    
+                // if sticky subs are enabled - displace subs
+                displaceSubtitles(areSubsEnabled())
+                break;
+
+            default:
+                break;
+        }
+
     })
 }
 
