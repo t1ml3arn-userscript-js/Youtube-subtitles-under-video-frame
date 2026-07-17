@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.5.1
+// @version     1.6.0
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -42,11 +42,16 @@ const SUBS_GAP = 64;
 const SUBS_GAP_THEATER = 100;
 const KEY__PLAYER_CAPTION_DISPLAY_SETTINGS = 'yt-player-caption-display-settings'
 const KEY__PLAYER_STICKY_CAPTION = 'yt-player-sticky-caption'
+const KEY__PLAYER_STICKY_CAPTION_07_2026 = 'yt-player-caption-persistence'
 
 const USERJS_STYLE_CONTENT = `
 .${USERJS_ELT_CLASS} {
     --subs-gap: ${SUBS_GAP}px;
     --subs-gap-theater: ${SUBS_GAP_THEATER}px;
+    --captions-size: calc(0.65vw + 2.35vh);
+    /* user can change font scale with YT settings */
+    --user-scale: 1;
+    --subs-gap: calc(var(--captions-size) * var(--user-scale) * 2 + 30px);
 }
 
 .${USERJS_ELT_CLASS}:not([fullscreen]) .caption-window.ytp-caption-window-bottom {
@@ -54,7 +59,7 @@ const USERJS_STYLE_CONTENT = `
     margin-top: 0 !important;
     position: absolute !important;
     bottom: 0 !important;
-    top: calc(100% + 16px) !important;
+    top: calc(100% + 10px) !important;
     z-index: 9999 !important;
 }
 
@@ -228,9 +233,9 @@ function localStorageHook() {
     }
 }
 
-function getGapSize(f, initial) {
+function calcFontScale(value) {
     // this formula is found in youtube js code
-    return initial * (1 + 0.25 * Math.max(f || 0, 0));
+    return (1 + 0.25 * Math.max(value || 0, 0));
 }
 
 function updateGapSize() {
@@ -244,11 +249,31 @@ function updateGapSize() {
     } catch(e) {
         ccDisplaySettings = {}
     }
+
     const fontSizeIncrement = ccDisplaySettings.fontSizeIncrement || 0
-    let newGap = getGapSize(fontSizeIncrement, SUBS_GAP);
-    document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap', `${newGap}px`)
-    newGap = getGapSize(fontSizeIncrement, SUBS_GAP_THEATER)
-    document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--subs-gap-theater', `${newGap}px`)
+    let userScale = calcFontScale(fontSizeIncrement);
+
+    document.querySelector(PLAYER_ELT_SELECTOR).style.setProperty('--user-scale', `${userScale}`)
+}
+
+/** Checks if local storage has a setting for 
+ * enabled/disabled subs.
+ * 
+ * **NOTE**: This setting might not be in local storage even
+ * if a registered YT user enabled subtitles globally 
+ * with YT settings. 
+ * @returns {Bool} 
+ */
+function areSubsEnabled() {
+    const raw = localStorage.getItem(KEY__PLAYER_STICKY_CAPTION) ?? localStorage.getItem(KEY__PLAYER_STICKY_CAPTION_07_2026)
+    try {
+        let enabled = JSON.parse(JSON.parse(raw).data)
+        // console.log(`subs enabled: ${String(enabled).toUpperCase()}`);
+        return enabled
+    } catch(e) {
+        // console.log(`subs NOT ENABLED`);
+        return false
+    }
 }
 
 /** Checks if local storage has a setting for 
@@ -284,7 +309,7 @@ function init() {
     window.addEventListener('storageSetItem', e => {
         const { key } = e.detail;
 
-        // console.log(`YT local storage "${key}" was updated`)
+        // console.log(`YT local storage was updated. "${key}" is now ${localStorage.getItem(key)}`);
 
         switch (key) {
             case KEY__PLAYER_CAPTION_DISPLAY_SETTINGS:
