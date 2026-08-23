@@ -22,7 +22,7 @@
 // @description Have you ever been annoyed by youtube subtitles covering some important part of the video? No more! The userscript moves subtitles under video frame (but you can still drag-move them horizontally). It works for default and theater modes. 
 // @description:RU  Вам когда-нибудь мешали субтитры Youtube, закрывыющие какую-то важную область видео? Пора это прекратить! Этот скрипт сдвигает субтитры под видео (вы все еще можете перетаскивать их по горизонтали). Работает в режимах "обычный" и "широкий экран".
 // @namespace   https://github.com/t1ml3arn-userscript-js
-// @version     1.6.1
+// @version     1.6.2
 // @match       https://www.youtube.com/*
 // @match       https://youtube.com/*
 // @grant       none
@@ -41,7 +41,7 @@ const PLAYER_ELT_SELECTOR = 'ytd-watch-flexy'
 const SUBS_GAP = 64;
 const SUBS_GAP_THEATER = 100;
 const KEY__PLAYER_CAPTION_DISPLAY_SETTINGS = 'yt-player-caption-display-settings'
-const KEY__PLAYER_CAPTION_PERSISTANCE = 'yt-player-caption-persistence'
+const KEYS__PLAYER_CAPTIONS_ENABLED = ['yt-player-sticky-caption', 'yt-player-caption-persistence']
 
 const USERJS_STYLE_CONTENT = `
 .${USERJS_ELT_CLASS} {
@@ -265,15 +265,18 @@ function updateGapSize() {
  * @returns {Bool} 
  */
 function areSubsEnabled() {
-    const raw = localStorage.getItem(KEY__PLAYER_CAPTION_PERSISTANCE)
-    try {
-        let enabled = JSON.parse(JSON.parse(raw).data);
-        // console.debug(`subs enabled: ${String(enabled).toUpperCase()}`);
-        return enabled
-    } catch(e) {
-        // console.debug(`subs NOT ENABLED`);
-        return false
-    }
+    let subsEnabled = KEYS__PLAYER_CAPTIONS_ENABLED
+                            .map(key => localStorage.getItem(key))
+                            // .map(data => data ? false : JSON.parse(JSON.parse(data).data))
+                            .map(data => {
+                                try {
+                                    return JSON.parse(JSON.parse(data).data)
+                                } catch(e) {
+                                    return false
+                                }
+                            })
+    subsEnabled = subsEnabled.some(x => x === true)
+    return subsEnabled
 }
 
 function init() {
@@ -294,22 +297,12 @@ function init() {
 
         // console.debug(`YT local storage was updated. "${key}" is now ${localStorage.getItem(key)}`);
 
-        switch (key) {
-            case KEY__PLAYER_CAPTION_DISPLAY_SETTINGS:
-                
-                updateGapSize()
-                break;
-
-            case KEY__PLAYER_CAPTION_PERSISTANCE:
-    
-                // if sticky subs are enabled - displace subs
-                displaceSubtitles(areSubsEnabled())
-                break;
-
-            default:
-                break;
+        if (key === KEY__PLAYER_CAPTION_DISPLAY_SETTINGS) {
+            updateGapSize()
+        } else if (KEYS__PLAYER_CAPTIONS_ENABLED.includes(key)) {
+            // if sticky subs are enabled - displace subs
+            displaceSubtitles(areSubsEnabled())
         }
-
     })
 }
 
